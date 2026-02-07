@@ -1,0 +1,127 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.container {
+    width: 100%;
+    max-width: 500px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+.header {
+    background-color: #4a6fa5;
+    color: #fff;
+    text-align: center;
+    padding: 24px 0;
+}
+.header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    letter-spacing: 0.5px;
+}
+.form-wrapper {
+    padding: 30px;
+}
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #444;
+}
+input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    margin-bottom: 20px;
+}
+input[type="text"]:focus {
+    outline: none;
+    border-color: #4a6fa5;
+}
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+button {
+    flex: 1;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+button[name="action"][value="createMR"] {
+    background-color: #bd395b;
+    color: white;
+}
+button[name="action"][value="createMR"]:hover {
+    background-color: #a02e4c;
+}
+button[name="action"][value="merge"] {
+    background-color: #4aa56a;
+    color: white;
+}
+button[name="action"][value="merge"]:hover {
+    background-color: #3b8755;
+}
+.messages {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    display: none;
+}
+.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+a.mr-link {
+    color: #4a6fa5;
+    text-decoration: none;
+    font-weight: 600;
+}
+a.mr-link:hover {
+    text-decoration: underline;
+}
+@media (max-width: 480px) {
+    .form-wrapper {
+        padding: 20px;
+    }
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    .button-group {
+        flex-direction: column;
+    }
+}

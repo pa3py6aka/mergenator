@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мерженатор</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Мерженатор</h1>
+    </div>
+    <div class="form-wrapper">
+        <form id="mergeForm">
+            <label for="source_branch">Ветка Git</label>
+            <input
+                    type="text"
+                    id="source_branch"
+                    name="source_branch"
+                    placeholder="Введите название ветки"
+                    required
+            >
+            <div class="button-group">
+                <button type="submit" name="action" value="createMR">Создать MR</button>
+                <button type="submit" name="action" value="merge">Смержить</button>
+            </div>
+        </form>
+
+        <!-- Область для вывода сообщений -->
+        <div id="messages" class="messages"></div>
+    </div>
+</div>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>
