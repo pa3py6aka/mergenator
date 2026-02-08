@@ -6,16 +6,16 @@ import (
 )
 
 const (
-	REQUIRED_PREFIX = "r2533-andagar/VRPROC-"
-	CI_PREFIX       = "CI-"
-	PREFIX          = "r2533-andagar/"
+	RequiredPrefix = "r2533-andagar/VRPROC-"
+	CIPrefix       = "CI-"
+	PREFIX         = "r2533-andagar/"
 )
 
 // Проверка префикса ветки
 func validateBranchPrefix(branch string) error {
-	if !strings.HasPrefix(branch, REQUIRED_PREFIX) {
+	if !strings.HasPrefix(branch, RequiredPrefix) {
 		return fmt.Errorf(
-			"Ветка должна начинаться с префикса '%s'", REQUIRED_PREFIX)
+			"Ветка должна начинаться с префикса '%s'", RequiredPrefix)
 	}
 	return nil
 }
@@ -23,5 +23,5 @@ func validateBranchPrefix(branch string) error {
 // Формирование CI-ветки
 func makeCIBranchName(branch string) string {
 	suffix := strings.TrimPrefix(branch, PREFIX)
-	return PREFIX + CI_PREFIX + suffix
+	return PREFIX + CIPrefix + suffix
 }

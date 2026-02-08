@@ -4,31 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мерженатор</title>
-    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/main_v2.css">
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <h1>Мерженатор</h1>
+<header class="top-bar">
+    <div class="top-bar-content">
+        <a href="/" class="menu-link active">Мерженатор</a>
+        <div class="sep"></div>
+        <a href="/" class="menu-link">Tools</a>
     </div>
-    <div class="form-wrapper">
-        <form id="mergeForm">
-            <label for="source_branch">Ветка Git</label>
-            <input
-                    type="text"
-                    id="source_branch"
-                    name="source_branch"
-                    placeholder="Введите название ветки"
-                    required
-            >
-            <div class="button-group">
-                <button type="submit" name="action" value="createMR">Создать MR</button>
-                <button type="submit" name="action" value="merge">Смержить</button>
+</header>
+<div class="main-content">
+    <div class="forms">
+        <div class="forms-container">
+            <!-- Форма для Backend -->
+            <div class="form-card">
+                <h2>Backend</h2>
+                <form action="/merge" id="mergeFormBackend" method="POST" class="merge-form">
+                    <label for="source_branch_backend">Ветка Git</label>
+                    <input type="hidden" name="repo" value="backend">
+                    <input
+                            type="text"
+                            id="source_branch_backend"
+                            name="source_branch"
+                            placeholder="Введите название ветки"
+                            required
+                    >
+                    <div class="button-group">
+                        <button type="submit" name="action" value="createMR">Создать MR</button>
+                        <button type="submit" name="action" value="merge">Смержить</button>
+                    </div>
+                </form>
             </div>
-        </form>
 
-        <!-- Область для вывода сообщений -->
-        <div id="messages" class="messages"></div>
+            <!-- Форма для Frontend -->
+            <div class="form-card">
+                <h2>Frontend</h2>
+                <form action="/merge" id="mergeFormFrontend" method="POST" class="merge-form">
+                    <label for="source_branch_frontend">Ветка Git</label>
+                    <input type="hidden" name="repo" value="frontend">
+                    <input
+                            type="text"
+                            id="source_branch_frontend"
+                            name="source_branch"
+                            placeholder="Введите название ветки"
+                            required
+                    >
+                    <div class="button-group">
+                        <button type="submit" name="action" value="createMR">Создать MR</button>
+                        <button type="submit" name="action" value="merge">Смержить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="messages-container">
+            <pre id="output"></pre>
+        </div>
     </div>
 </div>
 

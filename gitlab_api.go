@@ -5,31 +5,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 )
 
-const (
-	GITLAB_API_URL = ""
-	PROJECT_ID     = ""
-	ACCESS_TOKEN   = ""
-)
-
 // Проверка существования ветки в репозитории через API
-func branchExistsInRepo(branch string) (bool, error) {
+func branchExistsInRepo(branch string, projectId string) (bool, error) {
 	escapedBranch := url.PathEscape(branch)
 	branchesUrl := fmt.Sprintf(
 		"%s/projects/%s/repository/branches/%s",
-		GITLAB_API_URL, PROJECT_ID, escapedBranch)
+		GitlabApiUrl, projectId, escapedBranch)
 
 	req, err := http.NewRequest("GET", branchesUrl, nil)
 	if err != nil {
 		return false, err
 	}
 
-	req.Header.Set("Private-Token", ACCESS_TOKEN)
+	req.Header.Set("Private-Token", AccessToken)
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return false, fmt.Errorf("ошибка запроса: %v", err)
 	}
@@ -46,113 +41,60 @@ func branchExistsInRepo(branch string) (bool, error) {
 	}
 }
 
-// Проверка открытых MR
-func hasOpenMergeRequest(sourceBranch string, targetBranch string) (bool, error) {
-	url := fmt.Sprintf(
+func hasOpenMR(source, target string, repo Repository) (bool, int, string, error) {
+	mrUrl := fmt.Sprintf(
 		"%s/projects/%s/merge_requests?source_branch=%s&target_branch=%s&state=opened",
-		GITLAB_API_URL, PROJECT_ID, sourceBranch, targetBranch)
+		GitlabApiUrl, repo.ProjectId, source, target)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", mrUrl, nil)
 	if err != nil {
-		return false, err
+		return false, 0, "", err
 	}
 
-	req.Header.Set("Private-Token", ACCESS_TOKEN)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return false, err
-	}
-
-	return len(body) > 2, nil // [] — пустой массив
-}
-
-// Проверяет, есть ли открытый MR от CI‑ветки в целевую ветку
-func hasOpenMergeRequestForCIBranch(ciBranch string) (bool, error) {
-	url := fmt.Sprintf(
-		"%s/projects/%s/merge_requests?source_branch=%s&target_branch=%s&state=opened",
-		GITLAB_API_URL, PROJECT_ID, url.PathEscape(ciBranch), url.PathEscape(TARGET_BRANCH))
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return false, err
-	}
-
-	req.Header.Set("Private-Token", ACCESS_TOKEN)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return false, fmt.Errorf("API ошибка: %d %s", resp.StatusCode, string(body))
-	}
-
-	var mrList []map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&mrList); err != nil {
-		return false, err
-	}
-
-	return len(mrList) > 0, nil
-}
-
-func hasOpenMR(source, target string) (bool, int, error) {
-	url := fmt.Sprintf(
-		"%s/projects/%s/merge_requests?source_branch=%s&target_branch=%s&state=opened",
-		GITLAB_API_URL, PROJECT_ID, source, target)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return false, 0, err
-	}
-
-	req.Header.Set("Private-Token", ACCESS_TOKEN)
+	req.Header.Set("Private-Token", AccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return false, 0, err
+		return false, 0, "", err
 	}
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
 
+	// Преобразуем в строку
+	bodyString := string(body)
+	// Выводим в лог
+	log.Printf("Ответ сервера (JSON):\n%s", bodyString)
+
 	if resp.StatusCode != http.StatusOK {
-		return false, 0, fmt.Errorf("API ошибка проверки MR: %d %s", resp.StatusCode, string(body))
+		return false, 0, "", fmt.Errorf("API ошибка проверки MR: %d %s", resp.StatusCode, string(body))
 	}
 
 	var mrs []struct {
-		ID int `json:"iid"`
+		ID     int    `json:"iid"`
+		WebURL string `json:"web_url"`
 	}
 	if err := json.Unmarshal(body, &mrs); err != nil {
-		return false, 0, err
+		return false, 0, "", err
 	}
 
 	if len(mrs) > 0 {
-		return true, mrs[0].ID, nil // Возвращаем ID первого найденного MR
+		return true, mrs[0].ID, mrs[0].WebURL, nil
 	}
 
-	return false, 0, nil
+	return false, 0, "", nil
 }
 
 // Создание MR
-func createGitLabMR(sourceBranch, title string) (string, error) {
-	url := fmt.Sprintf("%s/projects/%s/merge_requests", GITLAB_API_URL, PROJECT_ID)
+func createGitLabMR(sourceBranch, title string, repo Repository) (string, error) {
+	mrUrl := fmt.Sprintf("%s/projects/%s/merge_requests", GitlabApiUrl, repo.ProjectId)
 
 	data := map[string]interface{}{
 		"source_branch":        sourceBranch,
-		"target_branch":        TARGET_BRANCH,
+		"target_branch":        repo.StandBranch,
 		"title":                title,
-		"assignee_ids":         []int{ASSIGNEE_ID},
+		"assignee_ids":         []int{repo.AssigneeId},
 		"remove_source_branch": true,
 	}
 
@@ -161,15 +103,15 @@ func createGitLabMR(sourceBranch, title string) (string, error) {
 		return "", err
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", mrUrl, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Private-Token", ACCESS_TOKEN)
+	req.Header.Set("Private-Token", AccessToken)
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -194,9 +136,9 @@ func createGitLabMR(sourceBranch, title string) (string, error) {
 }
 
 // Создание ветки в удалённом репозитории
-func createRemoteBranch(sourceBranch, newBranch string) error {
+func createRemoteBranch(sourceBranch, newBranch string, repo Repository) error {
 	url := fmt.Sprintf("%s/projects/%s/repository/branches",
-		GITLAB_API_URL, PROJECT_ID)
+		GitlabApiUrl, repo.ProjectId)
 
 	data := map[string]interface{}{
 		"branch": newBranch,
@@ -214,9 +156,9 @@ func createRemoteBranch(sourceBranch, newBranch string) error {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Private-Token", ACCESS_TOKEN)
+	req.Header.Set("Private-Token", AccessToken)
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -231,18 +173,18 @@ func createRemoteBranch(sourceBranch, newBranch string) error {
 }
 
 // Удаление ветки в удалённом репозитории
-func deleteRemoteBranch(branch string) error {
+func deleteRemoteBranch(branch string, repo Repository) error {
 	url := fmt.Sprintf("%s/projects/%s/repository/branches/%s",
-		GITLAB_API_URL, PROJECT_ID, url.PathEscape(branch))
+		GitlabApiUrl, repo.ProjectId, url.PathEscape(branch))
 
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Private-Token", ACCESS_TOKEN)
+	req.Header.Set("Private-Token", AccessToken)
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -253,13 +195,15 @@ func deleteRemoteBranch(branch string) error {
 		return fmt.Errorf("Не удалось удалить ветку %s: %d %s", branch, resp.StatusCode, string(body))
 	}
 
+	log.Print(resp.StatusCode, resp.Body)
+
 	return nil
 }
 
 // Сливает указанную ветку (source) в целевую (targetBranch) через GitLab API
-func mergeBranchInto(source, targetBranch string) (int, error) {
-	url := fmt.Sprintf(
-		"%s/projects/%s/merge_requests", GITLAB_API_URL, PROJECT_ID)
+func mergeBranchInto(source, targetBranch string, repo Repository) (int, error) {
+	mrUrl := fmt.Sprintf(
+		"%s/projects/%s/merge_requests", GitlabApiUrl, repo.ProjectId)
 
 	data := map[string]interface{}{
 		"source_branch": source,
@@ -273,15 +217,15 @@ func mergeBranchInto(source, targetBranch string) (int, error) {
 		return 0, err
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", mrUrl, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return 0, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Private-Token", ACCESS_TOKEN)
+	req.Header.Set("Private-Token", AccessToken)
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return 0, err
 	}
@@ -306,9 +250,9 @@ func mergeBranchInto(source, targetBranch string) (int, error) {
 	return int(mrID), nil
 }
 
-func acceptMergeRequest(mrID int) error {
-	url := fmt.Sprintf(
-		"%s/projects/%s/merge_requests/%d/merge", GITLAB_API_URL, PROJECT_ID, mrID)
+func acceptMergeRequest(mrID int, projectId string) error {
+	mrUrl := fmt.Sprintf(
+		"%s/projects/%s/merge_requests/%d/merge", GitlabApiUrl, projectId, mrID)
 
 	// Тело запроса (даже если параметры не нужны)
 	data := map[string]interface{}{
@@ -320,13 +264,13 @@ func acceptMergeRequest(mrID int) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("PUT", mrUrl, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Private-Token", ACCESS_TOKEN)
+	req.Header.Set("Private-Token", AccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f7fa;
+    background-color: #333333;
     color: #333;
     line-height: 1.6;
     min-height: 100vh;
@@ -86,11 +86,53 @@ body {
 
 /* Основной контент (с отступом сверху, чтобы не перекрывался шапкой) */
 .main-content {
-    padding-top: 80px; /* 60px (высота шапки) + 20px отступ */
+    padding-top: 48px; /* 60px (высота шапки) + 20px отступ */
     min-height: calc(100vh - 80px);
     display: flex;
     justify-content: center;
     align-items: flex-start;
+}
+.forms {
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: flex-start;
+    gap: 5px;
+    width: 900px;
+    height: calc(100vh - 53px);
+}
+
+/* Вывод логов */
+.messages-container {
+    flex: 1 1 45%;
+    display: block;
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 14px 25px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: calc(100vh - 350px);
+
+    pre {
+        overflow-y: auto;          /* Вертикальный скролл при переполнении */
+        margin: 0;               /* Убираем отступы по умолчанию */
+        padding: 0;               /* Убираем внутренние отступы (можно настроить) */
+        height: 100%;            /* Занимаем всю высоту родителя */
+        max-height: 100%;       /* Не выходим за границы родителя */
+        box-sizing: border-box;
+    }
+}
+.time {
+    color: #0c5460;
+}
+.msg-error {
+    color: red; font-weight: bold;
+}
+.msg-header {
+    color: darkviolet; font-weight: bold;
+}
+.msg-success {
+    color: limegreen; font-weight: bold;
 }
 
 /* Контейнер для двух форм */
@@ -98,10 +140,10 @@ body {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    gap: 30px;
+    gap: 5px;
     max-width: 900px;
     width: 100%;
-    padding: 20px;
+    /*padding: 20px;*/
 }
 
 /* Карточка с формой */
@@ -115,10 +157,10 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.form-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-}
+/*.form-card:hover {*/
+/*    transform: translateY(-4px);*/
+/*    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);*/
+/*}*/
 
 .form-card h2 {
     text-align: center;
@@ -223,6 +265,13 @@ a.mr-link {
 
 a.mr-link:hover {
     text-decoration: underline;
+}
+
+.id-help-text {
+    a {
+        text-decoration: none;
+        color: #706969;
+    }
 }
 
 /* Адаптивные стили */
