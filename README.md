@@ -1,0 +1,52 @@
+# Мерженатор
+
+Приложение для создания MR в инстансе gitlab используя API. 
+Для специфических задач - когда надо выкладывать на стенд какую-то ветку но с какими-то дополнениями.
+
+В веб-морде указываете ветку(которую предварительно запушили в репозиторий), дальше приложение само создаёт новую ветку от указанной,
+мержит в неё ветку с дополнениями и создаёт MR в целевую ветку(например, в ветку на которой работает какой-нибудь сервер).
+
+В гитлабе также можно настроить вебхук на адрес https://this-app-url/webhook/on-push чтобы он срабатывал на push в репозиторий.
+Данное приложение отработает событие, автоматом подмержит изменения в ветку с дополнениями(созданную при создании MR). 
+
+## Конфиг nginx для прокси
+```
+server {
+    listen 443 ssl;
+    server_name my-domain.com;
+
+    ssl_certificate /path-to-certs/fullchain.pem;
+    ssl_certificate_key /path-to-certs/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    add_header X-Robots-Tag "noindex, nofollow, nosnippet, noarchive" always;
+
+    location / {
+        proxy_pass http://localhost:8085;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+# Веб-сокет
+server {
+    listen 8076 ssl;
+    server_name my-domain.com;
+
+    ssl_certificate /path-to-certs/fullchain.pem;
+    ssl_certificate_key /path-to-certs/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    location /ws {
+        proxy_pass http://localhost:8086;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}
+```
