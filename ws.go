@@ -19,6 +19,7 @@ const (
 var (
 	allowedOrigins = map[string]bool{
 		"http://localhost:8080": true,
+		WSAllowedOrigin:         true,
 	}
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -148,8 +149,8 @@ func broadcastMessage(message []byte) {
 
 func startWSServer() {
 	http.HandleFunc("/ws", wsHandler)
-	log.Printf("WebSocket-сервер запущен на %s", WS_PORT)
-	if err := http.ListenAndServe(WS_PORT, nil); err != nil {
+	log.Printf("WebSocket-сервер запущен на %s", WSPort)
+	if err := http.ListenAndServe(WSPort, nil); err != nil {
 		log.Fatalf("Ошибка WebSocket-сервера: %v", err)
 	}
 }

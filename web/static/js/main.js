@@ -11,7 +11,7 @@ function addLog(text, type) {
 }
 
 // Создаём соединение с сервером
-const socket = new WebSocket("ws://localhost:8090/ws");
+const socket = new WebSocket("wss://" + window.location.hostname + ":" + (window.location.port * 1 + 1) + "/ws");
 
 // Обработчик открытия соединения
 socket.onopen = function(event) {

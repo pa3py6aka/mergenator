@@ -5,12 +5,6 @@ import (
 	"strings"
 )
 
-const (
-	RequiredPrefix = "r2533-andagar/VRPROC-"
-	CIPrefix       = "CI-"
-	PREFIX         = "r2533-andagar/"
-)
-
 // Проверка префикса ветки
 func validateBranchPrefix(branch string) error {
 	if !strings.HasPrefix(branch, RequiredPrefix) {
@@ -22,6 +16,6 @@ func validateBranchPrefix(branch string) error {
 
 // Формирование CI-ветки
 func makeCIBranchName(branch string) string {
-	suffix := strings.TrimPrefix(branch, PREFIX)
-	return PREFIX + CIPrefix + suffix
+	suffix := strings.TrimPrefix(branch, Prefix)
+	return Prefix + CIPrefix + suffix
 }

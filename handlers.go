@@ -11,12 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	BackendStandBranch  = "andagar/r2533-bh-a1"
-	FrontendStandBranch = "andagar/pre-release"
-	CIMainBranch        = "r2533-andagar/ci"
-)
-
 func handleMerge(c *gin.Context) {
 	sourceBranch := c.PostForm("source_branch")
 	action := c.PostForm("action")
@@ -31,6 +25,7 @@ func handleMerge(c *gin.Context) {
 	gitlabUserIdInt, err := strconv.Atoi(gitlabUserId)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
+		return
 	}
 
 	repository := Repository{AssigneeId: gitlabUserIdInt}
@@ -67,7 +62,7 @@ func handleMerge(c *gin.Context) {
 func handleCreateMR(branch string, c *gin.Context, repo Repository, wsClientID string) error {
 	sendMessageByID(wsClientID, fmt.Sprintf(
 		"Запрос на создание MR ветки `%s` [%s]",
-		branch, getProjectName(repo.ProjectId)), WSMessageTypeHeader)
+		branch, getProjectNameByID(repo.ProjectId)), WSMessageTypeHeader)
 
 	// 1. Проверка префикса исходной ветки
 	sendMessageByID(wsClientID, "Проверка префикса исходной ветки", WSMessageTypeDefault)
@@ -97,7 +92,7 @@ func handleCreateMR(branch string, c *gin.Context, repo Repository, wsClientID s
 
 	// 5. Проверка открытого MR для CI‑ветки
 	sendMessageByID(wsClientID, "Проверяем есть ли уже открытый MR", WSMessageTypeDefault)
-	hasMR, mrID, mrUrl, err := hasOpenMR(ciBranch, repo.StandBranch, repo)
+	hasMR, mrID, mrUrl, err := hasOpenMR(ciBranch, repo.StandBranch, repo.ProjectId)
 	if err != nil {
 		return fmt.Errorf("Ошибка проверки MR для CI‑ветки: %v", err)
 	}
@@ -121,7 +116,7 @@ func handleCreateMR(branch string, c *gin.Context, repo Repository, wsClientID s
 	}
 
 	// 8. Проверка: есть ли уже открытый MR для этих веток?
-	hasMR, mrID, mrUrl, err = hasOpenMR(CIMainBranch, ciBranch, repo)
+	hasMR, mrID, mrUrl, err = hasOpenMR(CIMainBranch, ciBranch, repo.ProjectId)
 	if err != nil {
 		return fmt.Errorf("ошибка проверки существующих MR: %v", err)
 	}
@@ -130,7 +125,7 @@ func handleCreateMR(branch string, c *gin.Context, repo Repository, wsClientID s
 		log.Printf("Уже есть открытый MR №%d для %s → %s", mrID, CIMainBranch, ciBranch)
 	} else {
 		// Создаём новый MR
-		mrID, err = mergeBranchInto(CIMainBranch, ciBranch, repo)
+		mrID, err = mergeBranchInto(CIMainBranch, ciBranch, repo.ProjectId)
 		if err != nil {
 			return fmt.Errorf("не удалось создать MR: %v", err)
 		}
@@ -146,7 +141,7 @@ func handleCreateMR(branch string, c *gin.Context, repo Repository, wsClientID s
 
 	// 10. Создание MR от CI‑ветки
 	sendMessageByID(wsClientID, fmt.Sprintf("Создаём MR от CI-ветки `%s` в ветку стенда `%s`", ciBranch, repo.StandBranch), WSMessageTypeDefault)
-	title := strings.TrimPrefix(ciBranch, PREFIX+CIPrefix)
+	title := strings.TrimPrefix(ciBranch, Prefix+CIPrefix)
 	mrURL, err := createGitLabMR(ciBranch, title, repo)
 	if err != nil {
 		return err
@@ -168,7 +163,7 @@ func handleMergeAction(branch string, c *gin.Context, project Repository) error 
 	}
 
 	// 2. Проверка открытых MR
-	hasMR, _, mrUrl, err := hasOpenMR(branch, project.StandBranch, project)
+	hasMR, _, mrUrl, err := hasOpenMR(branch, project.StandBranch, project.ProjectId)
 	if err != nil {
 		return fmt.Errorf("Ошибка при проверке MR: %v", err)
 	}
