@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/tls"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"time"
 )
@@ -22,7 +24,7 @@ func main() {
 	// Запускаем HTTP-сервер в отдельной горутине
 	go startHTTPServer()
 	// Запускаем WebSocket-сервер в отдельной горутине
-	go startWSServer()
+	// go startWSServer()
 
 	select {}
 }
@@ -37,8 +39,32 @@ func startHTTPServer() {
 	router.POST("/merge", handleMerge)
 	router.POST("/webhook/on-push", handleWebhook)
 
-	if err := router.Run("localhost" + HttpPort); err != nil {
-		panic(err)
+	router.GET("/ws", func(c *gin.Context) {
+		wsHandler(c.Writer, c.Request)
+	})
+
+	// Создаём TLS-конфигурацию
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12, // Минимальная версия TLS
+	}
+
+	if OverProxy {
+		if err := router.Run("localhost" + HttpPort); err != nil {
+			panic(err)
+		}
+	} else {
+		// Создаём HTTP-сервер с TLS-конфигурацией
+		server := &http.Server{
+			Addr:      "localhost" + HttpPort, // например, ":8085"
+			Handler:   router,
+			TLSConfig: tlsConfig,
+		}
+
+		log.Printf("HTTPS server running on https://localhost%s", HttpPort)
+		err := server.ListenAndServeTLS(SSLCertPem, SSLKeyPem)
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatalf("HTTPS server failed to start: %v", err)
+		}
 	}
 }
 

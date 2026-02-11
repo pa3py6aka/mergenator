@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 )
 
 const (
@@ -18,8 +19,8 @@ const (
 
 var (
 	allowedOrigins = map[string]bool{
-		"http://localhost:8080": true,
-		WSAllowedOrigin:         true,
+		"https://localhost:8085": true,
+		WSAllowedOrigin:          true,
 	}
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -51,16 +52,22 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Ошибка установки WebSocket:", err)
 		return
 	}
+	defer conn.Close()
 
-	// Генерируем уникальный ID
+	conn.SetReadLimit(65536)
+
+	// Обработчик pong
+	conn.SetPongHandler(func(appData string) error {
+		log.Println("Получен pong от клиента")
+		return conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	})
+
 	clientID := uuid.New().String()
-
 	client := &Client{
 		conn: conn,
 		id:   clientID,
 	}
 
-	// Сохраняем клиента
 	mutex.Lock()
 	clients[clientID] = client
 	mutex.Unlock()
@@ -69,22 +76,40 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		mutex.Lock()
 		delete(clients, clientID)
 		mutex.Unlock()
-		conn.Close()
 	}()
 
-	// Отправляем ID клиенту сразу после подключения
-	err = conn.WriteMessage(websocket.TextMessage, []byte("{\"clientID\":\""+clientID+"\"}"))
+	// Отправляем ID клиенту
+	err = conn.WriteJSON(map[string]string{"clientID": clientID})
 	if err != nil {
 		log.Printf("Ошибка отправки ID клиенту: %v", err)
 		return
 	}
 
+	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("Соединение закрыто:", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("WebSocket ошибка: %v", err)
+			}
 			break
 		}
+
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
+		// Обрабатываем ping сообщения от клиента
+		var msg map[string]interface{}
+		if err := json.Unmarshal(message, &msg); err == nil {
+			if msg["type"] == "ping" {
+				pongMsg := map[string]string{"type": "pong"}
+				if err := conn.WriteJSON(pongMsg); err != nil {
+					log.Printf("Ошибка отправки pong: %v", err)
+				}
+				continue
+			}
+		}
+
 		log.Printf("Получено от %s: %s", clientID, message)
 	}
 }

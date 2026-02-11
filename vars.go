@@ -21,6 +21,10 @@ var (
 	RequiredPrefix      string
 	Prefix              string
 	CIPrefix            string
+
+	OverProxy  bool
+	SSLCertPem string
+	SSLKeyPem  string
 )
 
 const ()
@@ -45,4 +49,8 @@ func setEnvs() {
 	RequiredPrefix = os.Getenv("REQUIRED_PREFIX")
 	Prefix = os.Getenv("PREFIX")
 	CIPrefix = os.Getenv("CI_PREFIX")
+
+	OverProxy = os.Getenv("OVER_PROXY") == "true"
+	SSLCertPem = os.Getenv("SSL_CERT_PEM")
+	SSLKeyPem = os.Getenv("SSL_KEY_PEM")
 }
