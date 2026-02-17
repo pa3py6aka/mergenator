@@ -3,7 +3,9 @@ package main
 import (
 	"crypto/tls"
 	"github.com/gin-gonic/gin"
+	"html/template"
 	"log"
+	"mergenator/tools"
 	"net/http"
 	"time"
 )
@@ -31,13 +33,21 @@ func main() {
 
 func startHTTPServer() {
 	router := gin.Default()
-	router.LoadHTMLGlob("web/templates/*.html")
+
+	router.SetFuncMap(template.FuncMap{
+		"isCurrentPage": func(t time.Time) string {
+			return t.Format("2006-01-02")
+		},
+	})
+
+	router.LoadHTMLGlob("web/templates/**/*.tmpl")
 	router.Static("/static", "./web/static")
 	router.StaticFile("/favicon.ico", "./web/static/img/favicon.ico")
 
 	router.GET("/mergenator", getMergenatorPage)
 	router.POST("/merge", handleMerge)
 	router.POST("/webhook/on-push", handleWebhook)
+	router.GET("/tools", tools.GetToolsPage)
 
 	router.GET("/ws", func(c *gin.Context) {
 		wsHandler(c.Writer, c.Request)
@@ -71,9 +81,12 @@ func startHTTPServer() {
 func getMergenatorPage(c *gin.Context) {
 	_, err := c.Cookie("gitlab_user_id")
 	if err != nil {
-		c.HTML(200, "login.html", gin.H{})
+		c.HTML(200, "login.tmpl", gin.H{})
 		return
 	}
 
-	c.HTML(200, "main.html", gin.H{})
+	c.HTML(200, "mergenator.tmpl", gin.H{
+		"PageTitle": "Мерженатор",
+		"CurPage":   "mergenator",
+	})
 }
