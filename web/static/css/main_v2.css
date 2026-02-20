@@ -11,6 +11,15 @@ body {
     line-height: 1.6;
     min-height: 100vh;
 }
+.bd-hack {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 'JetBrains Mono', 'Fira Code', monospace;            font-size: 13px;
+    background-color: #2b2b2b;  /* фон подложки, если что */
+    height: 100vh;
+    display: flex;
+    line-height: 1.5;
+    color: #a9b7c6;              /* основной светлый текст */
+    overflow: hidden;             /* убираем скроллы у body, будут внутри столбцов */
+}
 
 /* Фиксированная шапка-топбар */
 .top-bar {
@@ -272,6 +281,43 @@ a.mr-link:hover {
         text-decoration: none;
         color: #706969;
     }
+}
+.full-width {
+    flex: 1;
+}
+.card {
+    margin: 5px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 12px 20px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.tools-menu-btn {
+    flex: 1;
+    padding: 15px 30px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    background-color: #2ea04e;
+    color: white;
+    transform: scale(1.02);
+}
+.tools-content {
+    display: flex;
+    flex-direction: row;
+}
+.tools-left-menu {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+}
+.tools-output {
+    background-color: white;
+    flex: 5;
 }
 
 /* Адаптивные стили */

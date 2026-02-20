@@ -43,6 +43,7 @@ func startHTTPServer() {
 	router.LoadHTMLGlob("web/templates/**/*.tmpl")
 	router.Static("/static", "./web/static")
 	router.StaticFile("/favicon.ico", "./web/static/img/favicon.ico")
+	router.StaticFile("/", "./web/templates/pages/myTools.html")
 
 	router.GET("/mergenator", getMergenatorPage)
 	router.POST("/merge", handleMerge)

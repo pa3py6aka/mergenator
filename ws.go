@@ -19,8 +19,8 @@ const (
 
 var (
 	allowedOrigins = map[string]bool{
-		"https://localhost:8085": true,
-		WSAllowedOrigin:          true,
+		"https://localhost:8085":             true,
+		"https://bh-a1.cow-and-dog.com:8075": true,
 	}
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,

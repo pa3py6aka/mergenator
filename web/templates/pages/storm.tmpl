@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTools</title>
+    <link rel="stylesheet" href="/static/css/storm.css">
+</head>
+<body>
+<!-- Левый столбец (меню) -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        📌 MY TOOLS
+    </div>
+    <ul class="menu" id="mainMenu">
+        <li class="menu-item active" data-key="mergenator">Mergenator</li>
+        <li class="menu-item" data-key="project">Project Structure</li>
+        <li class="menu-item" data-key="structure">File Tree</li>
+        <li class="menu-item" data-key="database">Database Console</li>
+        <li class="menu-item" data-key="settings">Settings / Preferences</li>
+        <li class="menu-item" data-key="terminal">Terminal</li>
+        <li class="menu-item" data-key="commit">Commit changes</li>
+    </ul>
+
+    <!-- Дополнительная декоративная панель (имитация вкладок инструментов) -->
+    <div style="margin-top: auto; padding: 12px 8px; border-top: 1px solid #2b2b2b; font-size: 11px; color: #6a7a84;">
+        <span style="margin-left: 8px;">🔍 Structure</span> • <span>🕒 History</span> • <span>📦 TODO</span>
+    </div>
+</div>
+
+<!-- Правый столбец (контент) -->
+<div class="content-panel" id="contentArea">
+    <!-- маленькая имитация вкладок редактора (просто декор) -->
+    <div class="fake-tabs">
+        <div class="fake-tab active-tab">Welcome.php</div>
+        <div class="fake-tab">project.xml</div>
+        <div class="fake-tab">Database.sql</div>
+    </div>
+
+    <!-- Динамический контент будет подставлен сюда через js -->
+    <div id="dynamicContent">
+        <!-- сюда подставится welcome контент по умолчанию -->
+    </div>
+</div>
+
+<!-- Маленькая строка состояния справа снизу (как в IDE) -->
+<div class="status-bar">
+    UTF-8  •  Unix (LF)  •  PHP 8.2  •  💬 0:0
+</div>
+
+<script>
+    (function() {
+        // Элементы
+        const menuItems = document.querySelectorAll('.menu-item');
+        const contentDiv = document.getElementById('dynamicContent');
+
+        // Объект с контентом для каждого пункта (стилизованный под PhpStorm)
+        const contentMap = {
+            mergenator: `
+                    <h2>👋 Welcome to PhpStorm (Dark Edition)</h2>
+                    <p>Это имитация интерфейса IDE в тёмной теме. Выбрано меню <span class="tag"><strong>Welcome</strong></span>.</p>
+                    <p>Вы можете открыть недавний проект или создать новый:</p>
+                    <pre>
+📂 composer.json
+📁 src/
+    📄 index.php
+    📄 helper.php
+📁 vendor/
+                    </pre>
+                    <h3>🔥 Быстрые ссылки</h3>
+                    <ul style="margin-left: 20px; color: #a9b7c6;">
+                        <li><code>Ctrl+Shift+A</code> — поиск действий</li>
+                        <li><code>Alt+Enter</code> — показать исправления</li>
+                        <li><code>Shift дважды</code> — поиск везде</li>
+                    </ul>
+                    <p>❤️ Наслаждайтесь тёмной темой как в PhpStorm.</p>
+                `,
+            project: `
+                    <h2>📁 Project Structure</h2>
+                    <p>Текущая структура проекта (пример):</p>
+                    <pre>
+my-project/
+ ├── .idea/
+ ├── src/
+ │    ├── Controller/
+ │    │    └── IndexController.php
+ │    ├── Entity/
+ │    │    └── User.php
+ │    └── Repository/
+ ├── templates/
+ │    └── base.html.twig
+ ├── config/
+ │    └── routes.yaml
+ ├── public/
+ │    └── index.php
+ └── composer.json
+                    </pre>
+                    <p><span class="tag">// 12 файлов, 3 папки</span></p>
+                `,
+            structure: `
+                    <h2>🌳 File Tree (иммитация)</h2>
+                    <pre style="background: #1f2123;">
+vendor/
+  bin/
+  composer/
+  autoload.php
+src/
+  📁 Main/
+      MainClass.php
+      📁 Sub/
+          Worker.php
+tests/
+  bootstrap.php
+.gitignore
+README.md
+                    </pre>
+                `,
+            database: `
+                    <h2>🗄️ Database Console</h2>
+                    <p>Подключение: <code>mysql://root@localhost:3306/ide_db</code></p>
+                    <pre>
+> SHOW TABLES;
++-------------------+
+| Tables_in_ide_db  |
++-------------------+
+| migrations        |
+| users             |
+| cache_items       |
++-------------------+
+3 rows in set (0.01 sec)
+
+> SELECT * FROM users LIMIT 2;
++----+---------------+-----------+
+| id | email         | status    |
++----+---------------+-----------+
+| 1  | test@local    | active    |
+| 2  | admin@local   | inactive  |
++----+---------------+-----------+
+                    </pre>
+                `,
+            settings: `
+                    <h2>⚙️ Settings / Preferences</h2>
+                    <p>Имитация страницы настроек (только UI)</p>
+                    <pre>
+Appearance & Behavior
+  ├── Theme: Darcula (custom)
+  ├── Use dark window headers: ON
+Editor
+  ├── Font: JetBrains Mono / 14px
+  ├── Line spacing: 1.2
+  ├── Color Scheme: Darcula (default copy)
+Keymap
+  ├── Duplicate lines: Ctrl+D
+  ├── Comment: Ctrl+/
+Tools
+  ├── Terminal: PowerShell (Windows)
+  └── SSH Configurations: ~
+                    </pre>
+                `,
+            terminal: `
+                    <h2>>_ Terminal Emulator</h2>
+                    <p>Рабочая директория: <code>/var/www/project</code></p>
+                    <pre style="background:#1c1e20; border-left: 3px solid #6897bb;">
+$ php bin/console server:run
+ [OK] Server listening on http://127.0.0.1:8000
+
+$ git status
+On branch main
+Untracked files:
+  (use "git add &lt;file&gt;..." to include in what will be committed)
+        README.md
+        .env.local
+
+$ _
+                    </pre>
+                    <p><span class="tag">(Процесс PHP‑сервера запущен)</span></p>
+                `,
+            commit: `
+                    <h2>🔁 Commit changes (VCS)</h2>
+                    <p>Изменённые файлы:</p>
+                    <ul style="list-style-type: none; padding: 0;">
+                        <li>📄 <span style="color:#6a8759;">src/Controller/WelcomeController.php</span> (modified)</li>
+                        <li>📄 <span style="color:#cb7d4a;">templates/base.html.twig</span> (untracked)</li>
+                        <li>📄 <span style="color:#6897bb;">composer.json</span> (staged)</li>
+                    </ul>
+                    <pre style="margin-top: 8px;">
+> git diff --staged
+diff --git a/composer.json b/composer.json
+index e23ad1c..fa8e1b1 100644
+--- a/composer.json
++++ b/composer.json
+@@ -4,6 +4,7 @@
+     "require": {
+         "php": ">=8.0",
+         "symfony/console": "^6.0",
++        "symfony/yaml": "^6.2",
+     },
+ }
+                    </pre>
+                    <p>Сообщение коммита: <span style="background:#2b2b2b; border:1px solid #464a4d; padding:2px;">[Add] yaml support</span></p>
+                `
+        };
+
+        // Функция переключения активного пункта и обновления контента
+        function setActiveMenu(selectedItem) {
+            // убираем active у всех
+            menuItems.forEach(item => item.classList.remove('active'));
+
+            // добавляем актив текущему
+            selectedItem.classList.add('active');
+
+            // получаем ключ из data-key
+            const key = selectedItem.getAttribute('data-key');
+
+            // обновляем контент, если есть такой ключ, иначе заглушка
+            if (key && contentMap[key]) {
+                contentDiv.innerHTML = contentMap[key];
+            } else {
+                contentDiv.innerHTML = `<h2>🤷 Содержимое не определено</h2><p>Выберите другой пункт.</p>`;
+            }
+        }
+
+        // Вешаем обработчики кликов
+        menuItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                setActiveMenu(this);
+            });
+        });
+
+        // При загрузке показываем welcome (который уже active по разметке, но форсируем контент)
+        const defaultActive = document.querySelector('.menu-item.active');
+        if (defaultActive) {
+            setActiveMenu(defaultActive);
+        } else {
+            // если вдруг нет active, активируем первый пункт
+            setActiveMenu(menuItems[0]);
+        }
+
+    })();
+</script>
+</body>
+</html>
